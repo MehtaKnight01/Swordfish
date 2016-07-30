@@ -20,6 +20,7 @@
 #include <vector>
 #include <stack>
 #include "Helper.hpp"
+#include "Usage.hpp"
 
 using namespace std;
 
@@ -36,17 +37,13 @@ Occ occ;
 
 
 
-
-
-
-
 void countKmers(Occ & occ) {
     
     stack<Node> nodeStack;
     
     
     
-    //Initializing things:
+    //Create first node:
     
     vector<long long>interval = {1, static_cast<long long>(BWT.length())}; //starting interval
     //note, this goes from 1 to bwt.length, and it will crash if it is set from 0 to bwt.length - 1
@@ -55,22 +52,17 @@ void countKmers(Occ & occ) {
     
     long long depth = 0;
     
-    string pattern = ""; //just for debugging
+//    string pattern = ""; //just for debugging
     
     
     
     Node internalNode;
-    
-    internalNode.interval = interval;
-    internalNode.reverseInterval = reverseInterval;
-    internalNode.depth = depth;
-    
-    internalNode.pattern = pattern; //just for debugging
-    
-    
+        internalNode.interval = interval;
+        internalNode.reverseInterval = reverseInterval;
+        internalNode.depth = depth;
+//        internalNode.pattern = pattern; //just for debugging
     
     nodeStack.push(internalNode);
-    
     
     
     
@@ -87,6 +79,8 @@ void countKmers(Occ & occ) {
         internalNode = nodeStack.top();
         nodeStack.pop();
         
+        
+        
 //        //DEBUG PRINTOUT:
 //        
 //        cout << "Internal node information:" << endl;
@@ -94,14 +88,15 @@ void countKmers(Occ & occ) {
 //        cout << "Reverse interval: [" << internalNode.reverseInterval[0] << "," << internalNode.reverseInterval[1] << "]" << endl;
 //        cout << "Depth: " << internalNode.depth << endl;
 //        cout << "Pattern: " << internalNode.pattern << endl << endl << endl;
-//        
+
         
-        //TODO: Process node if depth >= k
+        
+        
+        //Process node if depth >= k
         if (internalNode.depth >= k) {
             kmerCounts += (1 - internalNode.numberOfChildren);
-        
 //            //DEBUG PRINTOUT:
-//            
+//
 //            cout << "Node was processed. It had " << internalNode.numberOfChildren << " children." << endl << endl << endl;
         }
         
@@ -109,8 +104,6 @@ void countKmers(Occ & occ) {
         
         
         //Use Delta OCC to determine which character(s) to prepend to check
-        
-        
         vector<long long> dOcc = deltaOcc(internalNode.interval, occ);
         
 //        //DEBUG PRINTOUT:
@@ -125,7 +118,7 @@ void countKmers(Occ & occ) {
         Node possibleNode;
         if(dOcc[0] > 1) {
             prependedCharacter = 'A';
-            possibleNode.pattern = prepend(prependedCharacter, internalNode.pattern); //just for debugging
+//            possibleNode.pattern = prepend(prependedCharacter, internalNode.pattern); //just for debugging
             
             //Save previous interval for use in determining reverse interval
             vector<long long> previousInterval = internalNode.interval;
@@ -166,7 +159,7 @@ void countKmers(Occ & occ) {
         
         if (dOcc[1] > 1) {
             prependedCharacter = 'C';
-            possibleNode.pattern = prepend(prependedCharacter, internalNode.pattern); //just for debugging
+//            possibleNode.pattern = prepend(prependedCharacter, internalNode.pattern); //just for debugging
             
             //Save previous interval for use in determining reverse interval
             vector<long long> previousInterval = internalNode.interval;
@@ -207,7 +200,7 @@ void countKmers(Occ & occ) {
         
         if (dOcc[2] > 1) {
             prependedCharacter = 'G';
-            possibleNode.pattern = prepend(prependedCharacter, internalNode.pattern); //just for debugging
+//            possibleNode.pattern = prepend(prependedCharacter, internalNode.pattern); //just for debugging
             
             
             //Save previous interval for use in determining reverse interval
@@ -248,7 +241,7 @@ void countKmers(Occ & occ) {
         
         if (dOcc[3] > 1) {
             prependedCharacter = 'T';
-            possibleNode.pattern = prepend(prependedCharacter, internalNode.pattern); //just for debugging
+//            possibleNode.pattern = prepend(prependedCharacter, internalNode.pattern); //just for debugging
             
             
             
@@ -299,120 +292,129 @@ int main(int argc, const char * argv[]) {
     
     //Proper input style: <command>, <kmer size>, <BWT file>, <reverse BWT file>
     
+    string command = argv[0];
+    
+    
+    //If 4 arguments were not supplied:
+    
     if (argc != 5) {
-        //perhaps return an error.
-        cout << "error: why did you not supply 4 arguments?" << endl << "The proper input style is <command>, <kmer size>, <BWT file>, <reverse BWT file> (without the commas)" << endl << "You supplied the following arguments:" << endl;
-        for (size_t i = 1; i < static_cast<unsigned int>(argc); i++) {
-            cout << argv[i] << endl;
-        }
-        return 0;
+        return usage(command);
     }
     
-    //the only command we want to support right now is count
+
     
-    if (argv[1] == string("count")) {
-        //call the count function
-//        cout << "Count called on filename " << argv[0];
+    //If the user called "count", run the program if possible
+    
+    if (argv[1] != string("count")) {
+        return usage(command);
+    } else {
+
+        
         
         ifstream ifs;
         
         
         
-        //Retrieve kmer size:
+        //Retrieve kmer size
         ifs.open(argv[2]);
         
-        
         if (ifs.is_open() == false) {
-            cout << "ERROR, the kmer size could not be understood" << endl;
+            cerr << "ERROR, the kmer size could not be understood" << endl;
             ifs.close();
-            return 0;
-        }
-        while (!ifs.eof()) {
-            ifs >> k;
+            return usage(command);
+        } else {
+        
+            while (!ifs.eof()) {
+                ifs >> k;
+            }
+            
         }
         ifs.close();
-//        cout << " with kmer size of " << k << endl;
         
         
-        //Retrieve forward BWT:
+        
+        
+        
+        //Retrieve forward BWT
         ifs.open(argv[3]);
         
         if (ifs.is_open() == false) {
-            cout << "ERROR, the input file could not be read" << endl;
+            cerr << "ERROR, the input file could not be read" << endl;
             ifs.close();
-            return 0;
-        }
+            return usage(command);
+        } else {
         
-        while (!ifs.eof())
-        {
-            //do some stuff, specifically parse the bwt
-            //I don't ever want to have to copy the entire string into a variable or function, so pass by reference makes sense I think
-            
-            //for now, store the BWT string into a variable and pass that by reference, I'll figure out how to avoid this step later
-            
-            ifs >> BWT;
+            while (!ifs.eof())
+            {
+                ifs >> BWT;
+            }
             
         }
         ifs.close();
+
         
-//        cout << "The BWT appears to have been read successfully" << endl;
         
-        //Retrieve reverse BWT:
-        ifs.open(argv[4]); //open the reverse BWT
+        
+        
+        
+        //Retrieve reverse BWT
+        ifs.open(argv[4]);
         
         if (ifs.is_open() == false) {
-            cout << "ERROR, the reverse BWT could not be read" << endl;
+            cerr << "ERROR, the reverse BWT could not be read" << endl;
             ifs.close();
-            return 0;
+            return usage(command);
+        } else {
+            
+            while (!ifs.eof()) {
+                ifs >> reverseBWT;
+            }
+            ifs.close();
+
         }
         
-        while (!ifs.eof()) {
-            ifs >> reverseBWT;
-        }
-        ifs.close();
         
-//        cout << "The reverse BWT appears to have been read successfully" << endl;
-//        cout << "DEBUG reverse BWT: " << reverseBWT << endl;
         
-        //Check to see if the size of the BWT and size of the reverse BWT are the same. If not, we have a problem.
+        
+        
+        //Make sure BWT and reverseBWT are the same length
         if(BWT.size() != reverseBWT.size()) {
-            cout << "BWT's are different sizes, please check files for accuracy." << endl;
-            return 0;
+            cerr << "BWT's are different sizes." << endl;
+            return usage(command);
         }
+        
+        
+        
         
         
         //Build the occ table using the BWT
         occ.build(BWT, 1);
+     
+        
+        
+        
+//        cout << "Count called with k-mer size " << k << endl;
+
         
         
         //Initialize the K-mer counts using the BWT
-        
-        
         const long long NUMBER_OF_RELEVANT_LEAF_NODES = BWT.size() - (k - 1);
         const long long OFFSET_DUE_TO_$ = 1;
         
-        
         kmerCounts = NUMBER_OF_RELEVANT_LEAF_NODES - OFFSET_DUE_TO_$; //the final kmerCount will also include a value representing the sum over all the internal nodes of (1 - # of children at each node)
         
-//        //Debugging occ
-//        cout << "Occ table:" << endl << occ << endl;
-//        cout << occ.return_$() << endl;
-//        
+        
+        
+        
         
         //K-mer counting:
-        
         countKmers(occ);
+            cout << "The result of the kmer counting program is that there are:" << endl;
+            cout << kmerCounts << endl;
+            cout << "unique kmers in the sequence string" << endl;
         
-        cout << "The result of the kmer counting program is that there are:" << endl << kmerCounts << endl << "unique kmers in the sequence string" << endl;
-
-        
-    } else {
-        cout << "ERROR: you did not call the count command" << endl;
-        return 0;
     }
-    
     return 0;
-    
     //eventually we will also allow people to input their own C array and occ table, but not now.
 }
 
