@@ -7,7 +7,6 @@
 //
 
 #include "Usage.hpp"
-#include <string>
 #include <iostream>
 
 int usage(std::string name) {

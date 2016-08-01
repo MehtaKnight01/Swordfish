@@ -21,6 +21,7 @@
 #include <stack>
 #include "Helper.hpp"
 #include "Usage.hpp"
+#include <thread>
 
 using namespace std;
 
@@ -289,6 +290,7 @@ void countKmers(Occ & occ) {
 
 
 int main(int argc, const char * argv[]) {
+    
     
     //Proper input style: <command>, <kmer size>, <BWT file>, <reverse BWT file>
     

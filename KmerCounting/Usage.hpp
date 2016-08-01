@@ -10,6 +10,7 @@
 #define Usage_hpp
 
 #include <stdio.h>
+#include <string>
 
 int usage(std::string name);
 

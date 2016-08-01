@@ -18,7 +18,7 @@ struct Node {
     std::vector<long long> interval;
     std::vector<long long>reverseInterval;
     long long depth;
-    std::string pattern;
+//    std::string pattern;
     int numberOfChildren;
     int getNumberOfChildren(std::string & reverseBWT, long long $_pos);
     bool isRightMaximal();

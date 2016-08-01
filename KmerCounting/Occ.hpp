@@ -41,7 +41,7 @@ public:
     vector<long long> C;
     vector<long long> G;
     vector<long long> T;
-    vector<long long> N;
+//    vector<long long> N;
 
     long long $_pos; //refers to the position in B where the dollar sign appears
   
@@ -54,7 +54,7 @@ private:
     
     //Update vector function
     
-    void updateVectorWith(long long A_count, long long C_count, long long G_count, long long T_count, long long N_count);
+    void updateVectorWith(long long A_count, long long C_count, long long G_count, long long T_count);
     
     
     

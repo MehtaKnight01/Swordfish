@@ -21,12 +21,12 @@ void Occ::build(string & B, int granularity) {
     long long C_count = 0;
     long long G_count = 0;
     long long T_count = 0;
-    long long N_count = 0;
+//    long long N_count = 0;
     
     char letter;
     
     //The first number for all the vectors will be zero, and then we will move from there.
-    updateVectorWith(0, 0, 0, 0, 0);
+    updateVectorWith(0, 0, 0, 0);
     
     
     for (size_t i = 0; i < B.length(); i++) {
@@ -54,21 +54,21 @@ void Occ::build(string & B, int granularity) {
             T_count++;
             
         } else if (letter == 'N' || letter == 'n') {
-            
-            N_count++;
+            cerr << "N detected" << endl;
+//            N_count++;
             
         } else if (letter == '$') {
             $_pos = i + 1; //treat $ separately -- mark its position and then don't increment other vectors
             //the plus one is a result of the fact that we offset the entire occ table by 1
         }
-        else { //catchall error if the letter is not ACGTN$
+        else { //catchall error if the letter is not ACGT$
             cout << "Error, unidentified character found" << endl;
         }
             
         
         
         if((i % granularity == 0)) {
-            updateVectorWith(A_count, C_count, G_count, T_count, N_count);
+            updateVectorWith(A_count, C_count, G_count, T_count);
         }
         
        
@@ -88,12 +88,12 @@ void Occ::build(string & B, int granularity) {
 }
 
 
-void Occ::updateVectorWith(long long A_count, long long C_count, long long G_count, long long T_count, long long N_count) {
+void Occ::updateVectorWith(long long A_count, long long C_count, long long G_count, long long T_count) {
     A.push_back(A_count);
     C.push_back(C_count);
     G.push_back(G_count);
     T.push_back(T_count);
-    N.push_back(N_count);
+//    N.push_back(N_count);
 }
 
 
@@ -139,11 +139,11 @@ ostream& operator<<(ostream& os, const Occ& occ) {
     }
     
     os << endl;
-    os << "N: ";
-    
-    for (size_t i = 0; i < occ.N.size(); i++) {
-        os << occ.N[i] << " ";
-    }
+//    os << "N: ";
+//    
+//    for (size_t i = 0; i < occ.N.size(); i++) {
+//        os << occ.N[i] << " ";
+//    }
     
     os << endl << endl;
     
