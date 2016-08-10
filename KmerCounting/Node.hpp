@@ -13,6 +13,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <stack>
 
 struct Node {
     std::vector<long long> interval;
@@ -22,6 +23,7 @@ struct Node {
     int numberOfChildren;
     int getNumberOfChildren(std::string & reverseBWT, long long $_pos);
     bool isRightMaximal();
+    void processNode(std::vector<long long> & dOcc, std::stack<Node> & nodeStack);
 };
 
 #endif /* Node_hpp */
