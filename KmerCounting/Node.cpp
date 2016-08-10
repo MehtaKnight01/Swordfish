@@ -10,6 +10,8 @@
 #include <vector>
 #include <string>
 
+
+
 int Node::getNumberOfChildren(std::string & reverseBWT, long long $_pos) {
     //NOTE: I opted against using reverse Occ to do this computation. I think this may increase the computational time a little, but halves the space requirement, and lowers the complexity of the code.
     
@@ -26,12 +28,16 @@ int Node::getNumberOfChildren(std::string & reverseBWT, long long $_pos) {
     for (size_t i = start; i <= end; i++) {
         char rBWTChar = reverseBWT[i];
         switch(rBWTChar) {
-            case 'A' : characters[0] = 1;
+            case 'a':
+            case 'A': characters[0] = 1;
                 break;
+            case 'c':
             case 'C' : characters[1] = 1;
                 break;
+            case 'g':
             case 'G' : characters[2] = 1;
                 break;
+            case 't':
             case 'T' : characters[3] = 1;
                 break;
             case 'N' : //TODO: add support for N

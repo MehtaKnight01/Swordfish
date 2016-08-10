@@ -22,6 +22,10 @@
 #include "Helper.hpp"
 #include "Usage.hpp"
 #include <thread>
+#include <queue>
+#include <numeric>
+#include "MutedQueue.hpp"
+
 
 using namespace std;
 
@@ -35,257 +39,280 @@ long long k;
 string BWT;
 string reverseBWT;
 Occ occ;
+unsigned int nThreads;
 
+MutedQueue threadSafeQueue;
 
-
-void countKmers(Occ & occ) {
+queue<Node> bfs(Occ & occ) {
     
-    stack<Node> nodeStack;
+    queue<Node> nodeQueue;
     
+    //Implement BFS until queue just exceeds number of available threads (very similar to DFS so no comments will be provided
     
-    
-    //Create first node:
-    
-    vector<long long>interval = {1, static_cast<long long>(BWT.length())}; //starting interval
-    //note, this goes from 1 to bwt.length, and it will crash if it is set from 0 to bwt.length - 1
-    
-    auto reverseInterval = interval; //both the interval and the reverse interval start the same
-    
+    vector<long long>interval = {1, static_cast<long long>(BWT.length())};
+    auto reverseInterval = interval;
     long long depth = 0;
     
-//    string pattern = ""; //just for debugging
-    
-    
-    
     Node internalNode;
-        internalNode.interval = interval;
-        internalNode.reverseInterval = reverseInterval;
-        internalNode.depth = depth;
-//        internalNode.pattern = pattern; //just for debugging
+    internalNode.interval = interval;
+    internalNode.reverseInterval = reverseInterval;
+    internalNode.depth = depth;
     
-    nodeStack.push(internalNode);
+    nodeQueue.push(internalNode);
     
-    
-    
-    
-    //Stack traversal:
-    
-    while(!nodeStack.empty()) {
+    while ((nodeQueue.size() < nThreads) && !nodeQueue.empty()) {
+        internalNode = nodeQueue.front();
+        nodeQueue.pop();
         
-        //Available variables: interval, reverseInterval, depth, pattern (for debugging)
-        
-        
-        
-        //Load the top stack item and remove that item from the stack
-        internalNode = nodeStack.top();
-        nodeStack.pop();
-        
-        
-        
-//        //DEBUG PRINTOUT:
-//        
-//        cout << "Internal node information:" << endl;
-//        cout << "Interval: [" << internalNode.interval[0] << "," << internalNode.interval[1] << "]" << endl;
-//        cout << "Reverse interval: [" << internalNode.reverseInterval[0] << "," << internalNode.reverseInterval[1] << "]" << endl;
-//        cout << "Depth: " << internalNode.depth << endl;
-//        cout << "Pattern: " << internalNode.pattern << endl << endl << endl;
-
-        
-        
-        
-        //Process node if depth >= k
-        if (internalNode.depth >= k) {
-            kmerCounts += (1 - internalNode.numberOfChildren);
-//            //DEBUG PRINTOUT:
-//
-//            cout << "Node was processed. It had " << internalNode.numberOfChildren << " children." << endl << endl << endl;
+        if(internalNode.depth >= k) {
+            kmerCounts += (1-internalNode.numberOfChildren);
         }
         
-        
-        
-        
-        //Use Delta OCC to determine which character(s) to prepend to check
         vector<long long> dOcc = deltaOcc(internalNode.interval, occ);
-        
-//        //DEBUG PRINTOUT:
-//        cout << "Delta Occ returned the following values: " << endl;
-//            cout << "A: " << dOcc[0] << endl;
-//            cout << "C: " << dOcc[1] << endl;
-//            cout << "G: " << dOcc[2] << endl;
-//            cout << "T: " << dOcc[3] << endl << endl << endl;
-        
         
         char prependedCharacter;
         Node possibleNode;
         if(dOcc[0] > 1) {
             prependedCharacter = 'A';
-//            possibleNode.pattern = prepend(prependedCharacter, internalNode.pattern); //just for debugging
             
-            //Save previous interval for use in determining reverse interval
-            vector<long long> previousInterval = internalNode.interval;
-            
-            //Determine interval
+            possibleNode.reverseInterval = getReverseIntervalBasedOn(internalNode.interval, internalNode.reverseInterval, prependedCharacter, reverseBWT, occ);
             possibleNode.interval = getIntervalBasedOn(internalNode.interval, prependedCharacter, occ);
-            
-//            //DEBUG PRINTOUT:
-//            cout << "We tried appending A. The new pattern is: " << possibleNode.pattern << endl;
-//            cout << "and the new interval is: [" << possibleNode.interval[0] << "," << possibleNode.interval[1] << "]" << endl;
-            
-            
-            //Determine reverse interval (note: not sure if I can do this step later or not
-            possibleNode.reverseInterval = getReverseIntervalBasedOn(previousInterval, internalNode.reverseInterval, prependedCharacter, reverseBWT, occ);
-            
-//            //MORE DEBUG PRINTOUT:
-//            cout << "and the new reverse interval is: [" << possibleNode.reverseInterval[0] << "," << possibleNode.reverseInterval[1] << "]" << endl << endl;
-            
-            
-            //Determine if right maximal, and if so, obtain reverse interval, incremement depth and then PUSH
             possibleNode.getNumberOfChildren(reverseBWT, occ.$_pos);
-            
-//            //DEBUG PRINTOUT:
-//            cout << "The number of children was: " << possibleNode.numberOfChildren << endl << endl;
-//            
             
             if(possibleNode.isRightMaximal()) {
                 
                 
                 possibleNode.depth = internalNode.depth + 1;
-                nodeStack.push(possibleNode);
+                nodeQueue.push(possibleNode);
                 
-//                cout << "We pushed it because it was right maximal" << endl << endl << endl;
-            } else {
-//                cout << "We didn't push it because it wasn't right maximal" << endl << endl << endl;
             }
         }
         
         if (dOcc[1] > 1) {
             prependedCharacter = 'C';
-//            possibleNode.pattern = prepend(prependedCharacter, internalNode.pattern); //just for debugging
             
-            //Save previous interval for use in determining reverse interval
-            vector<long long> previousInterval = internalNode.interval;
-            
-            
-            //Determine interval
+            possibleNode.reverseInterval = getReverseIntervalBasedOn(internalNode.interval, internalNode.reverseInterval, prependedCharacter, reverseBWT, occ);
             possibleNode.interval = getIntervalBasedOn(internalNode.interval, prependedCharacter, occ);
-            
-            //Determine reverse interval (note: not sure if I can do this step later or not
-            possibleNode.reverseInterval = getReverseIntervalBasedOn(previousInterval, internalNode.reverseInterval, prependedCharacter, reverseBWT, occ);
-            
-//            //DEBUG PRINTOUT:
-//            cout << "We tried appending C. The new pattern is: " << possibleNode.pattern << endl;
-//            cout << "and the new interval is: [" << possibleNode.interval[0] << "," << possibleNode.interval[1] << "]" << endl << endl;
-//            cout << "and the new reverse interval is: [" << possibleNode.reverseInterval[0] << "," << possibleNode.reverseInterval[1] << "]" << endl << endl;
-            
-            
-            //Determine if right maximal, and if so, obtain reverse interval and PUSH
             possibleNode.getNumberOfChildren(reverseBWT, occ.$_pos);
             
-//            //DEBUG PRINTOUT:
-//            cout << "The number of children was: " << possibleNode.numberOfChildren << endl << endl;
-//            
-            
             if(possibleNode.isRightMaximal()) {
-                
-//                possibleNode.reverseInterval = getReverseIntervalBasedOn(previousInterval, internalNode.reverseInterval, prependedCharacter, reverseBWT, occ);
                 possibleNode.depth = internalNode.depth + 1;
-
-                nodeStack.push(possibleNode);
                 
-//                cout << "We pushed it because it was right maximal" << endl << endl << endl;
-
-            } else {
-//                cout << "We didn't push it because it wasn't right maximal" << endl << endl << endl;
+                nodeQueue.push(possibleNode);
+                
             }
         }
         
         if (dOcc[2] > 1) {
             prependedCharacter = 'G';
-//            possibleNode.pattern = prepend(prependedCharacter, internalNode.pattern); //just for debugging
             
-            
-            //Save previous interval for use in determining reverse interval
-            vector<long long> previousInterval = internalNode.interval;
-            
-            //Determine interval
+            possibleNode.reverseInterval = getReverseIntervalBasedOn(internalNode.interval, internalNode.reverseInterval, prependedCharacter, reverseBWT, occ);
             possibleNode.interval = getIntervalBasedOn(internalNode.interval, prependedCharacter, occ);
-            
-            //Determine reverse interval (note: not sure if I can do this step later or not
-            possibleNode.reverseInterval = getReverseIntervalBasedOn(previousInterval, internalNode.reverseInterval, prependedCharacter, reverseBWT, occ);
-            
-//            //DEBUG PRINTOUT:
-//            cout << "We tried appending G. The new pattern is: " << possibleNode.pattern << endl;
-//            cout << "and the new interval is: [" << possibleNode.interval[0] << "," << possibleNode.interval[1] << "]" << endl << endl;
-//            cout << "and the new reverse interval is: [" << possibleNode.reverseInterval[0] << "," << possibleNode.reverseInterval[1] << "]" << endl << endl;
-            
-            
-            //Determine if right maximal, and if so, obtain reverse interval and PUSH
             possibleNode.getNumberOfChildren(reverseBWT, occ.$_pos);
-            
-//            //DEBUG PRINTOUT:
-//            cout << "The number of children was: " << possibleNode.numberOfChildren << endl << endl;
-            
             
             if(possibleNode.isRightMaximal()) {
                 
-//                possibleNode.reverseInterval = getReverseIntervalBasedOn(previousInterval, internalNode.reverseInterval, prependedCharacter, reverseBWT, occ);
                 possibleNode.depth = internalNode.depth + 1;
-
-                nodeStack.push(possibleNode);
                 
-//                cout << "We pushed it because it was right maximal" << endl << endl << endl;
-
-            } else {
-//                cout << "We didn't push it because it wasn't right maximal" << endl << endl << endl;
+                nodeQueue.push(possibleNode);
+                
             }
         }
         
         if (dOcc[3] > 1) {
             prependedCharacter = 'T';
-//            possibleNode.pattern = prepend(prependedCharacter, internalNode.pattern); //just for debugging
             
-            
-            
-            //Save previous interval for use in determining reverse interval
-            vector<long long> previousInterval = internalNode.interval;
-            
-            
-            //Determine interval
+            possibleNode.reverseInterval = getReverseIntervalBasedOn(internalNode.interval, internalNode.reverseInterval, prependedCharacter, reverseBWT, occ);
             possibleNode.interval = getIntervalBasedOn(internalNode.interval, prependedCharacter, occ);
-            
-            //Determine reverse interval (note: not sure if I can do this step later or not
-            possibleNode.reverseInterval = getReverseIntervalBasedOn(previousInterval, internalNode.reverseInterval, prependedCharacter, reverseBWT, occ);
-            
-//            //DEBUG PRINTOUT:
-//            cout << "We tried appending T. The new pattern is: " << possibleNode.pattern << endl;
-//            cout << "and the new interval is: [" << possibleNode.interval[0] << "," << possibleNode.interval[1] << "]" << endl << endl;
-//            cout << "and the new reverse interval is: [" << possibleNode.reverseInterval[0] << "," << possibleNode.reverseInterval[1] << "]" << endl << endl;
-            
-            
-            //Determine if right maximal, and if so, obtain reverse interval and PUSH
             possibleNode.getNumberOfChildren(reverseBWT, occ.$_pos);
-            
-//            //DEBUG PRINTOUT:
-//            cout << "The number of children was: " << possibleNode.numberOfChildren << endl << endl;
-//            
             
             if(possibleNode.isRightMaximal()) {
                 
-//                possibleNode.reverseInterval = getReverseIntervalBasedOn(previousInterval, internalNode.reverseInterval, prependedCharacter, reverseBWT, occ);
                 possibleNode.depth = internalNode.depth + 1;
-
-                nodeStack.push(possibleNode);
                 
-//                cout << "We pushed it because it was right maximal" << endl << endl << endl;
-
-            } else {
-//                cout << "We didn't push it because it wasn't right maximal" << endl << endl << endl;
+                nodeQueue.push(possibleNode);
+                
             }
         }
-        
-        
+    
     }
+    return nodeQueue;
 }
+
+
+
+void countKmers(Occ & occ, vector<long long> & results, int location) {
+    
+    //"counts" will temporarily store kmer counts
+    long long counts = results[location];
+
+    //TODO: Mutex around this:
+    
+    Node internalNode;
+    
+    while(threadSafeQueue.loadIntoInternalNode(internalNode)) {
+        
+        stack<Node> nodeStack;
+        
+        nodeStack.push(internalNode);
+        
+        //Stack traversal:
+        
+        while(!nodeStack.empty()) {
+            
+            //Available variables: interval, reverseInterval, depth, pattern (for debugging)
+            
+            //Load the top stack item and remove that item from the stack
+            internalNode = nodeStack.top();
+            nodeStack.pop();
+            
+            //Process node if depth >= k
+            if (internalNode.depth >= k) {
+                counts += (1 - internalNode.numberOfChildren);
+            }
+            
+            //Use Delta OCC to determine which character(s) to prepend to check
+            vector<long long> dOcc = deltaOcc(internalNode.interval, occ);
+            
+            
+            char prependedCharacter;
+            Node possibleNode;
+            if(dOcc[0] > 1) {
+                prependedCharacter = 'A';
+                
+                //Save previous interval for use in determining reverse interval
+                vector<long long> previousInterval = internalNode.interval;
+                
+                //Determine interval
+                possibleNode.interval = getIntervalBasedOn(internalNode.interval, prependedCharacter, occ);
+                
+                //Determine reverse interval (note: not sure if I can do this step later or not
+                possibleNode.reverseInterval = getReverseIntervalBasedOn(previousInterval, internalNode.reverseInterval, prependedCharacter, reverseBWT, occ);
+                
+                //Determine if right maximal, and if so, obtain reverse interval, incremement depth and then PUSH
+                possibleNode.getNumberOfChildren(reverseBWT, occ.$_pos);
+                
+                if(possibleNode.isRightMaximal()) {
+                    
+                    
+                    possibleNode.depth = internalNode.depth + 1;
+                    nodeStack.push(possibleNode);
+                    
+                }
+            }
+            
+            if (dOcc[1] > 1) {
+                prependedCharacter = 'C';
+                
+                //Save previous interval for use in determining reverse interval
+                vector<long long> previousInterval = internalNode.interval;
+                
+                
+                //Determine interval
+                possibleNode.interval = getIntervalBasedOn(internalNode.interval, prependedCharacter, occ);
+                
+                //Determine reverse interval (note: not sure if I can do this step later or not
+                possibleNode.reverseInterval = getReverseIntervalBasedOn(previousInterval, internalNode.reverseInterval, prependedCharacter, reverseBWT, occ);
+                
+             
+                //Determine if right maximal, and if so, obtain reverse interval and PUSH
+                possibleNode.getNumberOfChildren(reverseBWT, occ.$_pos);
+                
+                if(possibleNode.isRightMaximal()) {
+                    possibleNode.depth = internalNode.depth + 1;
+
+                    nodeStack.push(possibleNode);
+                    
+
+                }
+            }
+            
+            if (dOcc[2] > 1) {
+                prependedCharacter = 'G';
+                
+                //Save previous interval for use in determining reverse interval
+                vector<long long> previousInterval = internalNode.interval;
+                
+                //Determine interval
+                possibleNode.interval = getIntervalBasedOn(internalNode.interval, prependedCharacter, occ);
+                
+                //Determine reverse interval (note: not sure if I can do this step later or not
+                possibleNode.reverseInterval = getReverseIntervalBasedOn(previousInterval, internalNode.reverseInterval, prependedCharacter, reverseBWT, occ);
+                
+                //Determine if right maximal, and if so, obtain reverse interval and PUSH
+                possibleNode.getNumberOfChildren(reverseBWT, occ.$_pos);
+                
+                if(possibleNode.isRightMaximal()) {
+                    
+                    possibleNode.depth = internalNode.depth + 1;
+
+                    nodeStack.push(possibleNode);
+                    
+                }
+            }
+            
+            if (dOcc[3] > 1) {
+                prependedCharacter = 'T';
+                
+                //Save previous interval for use in determining reverse interval
+                vector<long long> previousInterval = internalNode.interval;
+                
+                
+                //Determine interval
+                possibleNode.interval = getIntervalBasedOn(internalNode.interval, prependedCharacter, occ);
+                
+                //Determine reverse interval (note: not sure if I can do this step later or not
+                possibleNode.reverseInterval = getReverseIntervalBasedOn(previousInterval, internalNode.reverseInterval, prependedCharacter, reverseBWT, occ);
+                
+                //Determine if right maximal, and if so, obtain reverse interval and PUSH
+                possibleNode.getNumberOfChildren(reverseBWT, occ.$_pos);
+                
+                if(possibleNode.isRightMaximal()) {
+                    
+                    possibleNode.depth = internalNode.depth + 1;
+
+                    nodeStack.push(possibleNode);
+                    
+                }
+            }
+            
+            
+        }
+    }
+    
+    //load kmer counts into results vector
+    results[location] = counts;
+}
+
+
+void threadedCount(Occ & occ) {
+    threadSafeQueue.loadQueue(bfs(occ));
+    vector<std::thread> threads;
+    vector<long long> results;
+    for (size_t i = 0; i < nThreads - 1; i++) {//-1 so that main can also count as a thread
+        results.push_back(0);
+        threads.push_back(std::thread(countKmers, std::ref(occ), std::ref(results), i));
+    }
+    
+    //Count k-mers using main thread as well
+    results.push_back(0);
+    countKmers(occ, results, nThreads - 1);
+    
+    for (size_t i = 0; i < nThreads - 1; i++) {
+        if(threads[i].joinable()) {
+            threads[i].join();
+        } else {
+            std::cerr << "Error, thread was not joinable" << endl;
+        }
+    }
+    
+    kmerCounts += std::accumulate(results.begin(), results.end(), 0);
+    
+    
+}
+
+
+
 
 
 
@@ -405,12 +432,13 @@ int main(int argc, const char * argv[]) {
         
         kmerCounts = NUMBER_OF_RELEVANT_LEAF_NODES - OFFSET_DUE_TO_$; //the final kmerCount will also include a value representing the sum over all the internal nodes of (1 - # of children at each node)
         
-        
+        //Determine number of available threads
+        nThreads = std::thread::hardware_concurrency();
         
         
         
         //K-mer counting:
-        countKmers(occ);
+        threadedCount(occ);
             cout << "The result of the kmer counting program is that there are:" << endl;
             cout << kmerCounts << endl;
             cout << "unique kmers in the sequence string" << endl;

@@ -10,9 +10,6 @@
 #include <string>
 #include <iostream>
 
-void processNode() {
-    //count the number of children
-}
 
 
 std::vector<long long> getIntervalBasedOn(std::vector<long long> interval, char character, Occ & occ) {

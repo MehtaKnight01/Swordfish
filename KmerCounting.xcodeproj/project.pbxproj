@@ -12,6 +12,7 @@
 		B78D7D341D303A0600B4A685 /* Helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B78D7D321D303A0600B4A685 /* Helper.cpp */; };
 		B79019061D00CE41005B32B8 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B79019051D00CE41005B32B8 /* main.cpp */; };
 		B792F2EC1D4D3761000CE8F1 /* Usage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B792F2EA1D4D3761000CE8F1 /* Usage.cpp */; };
+		B7B4F9771D5AC5D900D1C92D /* MutedQueue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B7B4F9751D5AC5D900D1C92D /* MutedQueue.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -37,6 +38,8 @@
 		B79019051D00CE41005B32B8 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		B792F2EA1D4D3761000CE8F1 /* Usage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Usage.cpp; sourceTree = "<group>"; };
 		B792F2EB1D4D3761000CE8F1 /* Usage.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Usage.hpp; sourceTree = "<group>"; };
+		B7B4F9751D5AC5D900D1C92D /* MutedQueue.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MutedQueue.cpp; sourceTree = "<group>"; };
+		B7B4F9761D5AC5D900D1C92D /* MutedQueue.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = MutedQueue.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -78,6 +81,8 @@
 				B78D7D331D303A0600B4A685 /* Helper.hpp */,
 				B792F2EA1D4D3761000CE8F1 /* Usage.cpp */,
 				B792F2EB1D4D3761000CE8F1 /* Usage.hpp */,
+				B7B4F9751D5AC5D900D1C92D /* MutedQueue.cpp */,
+				B7B4F9761D5AC5D900D1C92D /* MutedQueue.hpp */,
 			);
 			path = KmerCounting;
 			sourceTree = "<group>";
@@ -143,6 +148,7 @@
 				B79019061D00CE41005B32B8 /* main.cpp in Sources */,
 				B78D7D2E1D05DF1500B4A685 /* Occ.cpp in Sources */,
 				B78D7D341D303A0600B4A685 /* Helper.cpp in Sources */,
+				B7B4F9771D5AC5D900D1C92D /* MutedQueue.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

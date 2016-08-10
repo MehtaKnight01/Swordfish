@@ -14,7 +14,6 @@
 #include "Occ.hpp"
 
 
-void processNode();
 std::vector<long long> getIntervalBasedOn(std::vector<long long> interval, char character, Occ & occ);
 std::vector<long long> getReverseIntervalBasedOn(std::vector<long long> interval, std::vector<long long> reverseInterval, char character, string & reverseBWT, Occ & occ);
 string prepend(char charToPrepend, string pattern);
